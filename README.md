@@ -1,11 +1,10 @@
 # Chasing Sea Ice
-Python code to correct IceBridge flight paths to account for ice drift when underflying ICESat-2
- 
-
 #### Alek Petty, Linette Boisvert, Jeremy Harbeck
 
 *Original code written by Jeremy Harbeck and Linette Boisvert, adapted to Python and modularized by Alek Petty*
 
+Python code to correct IceBridge flight paths to account for ice drift when underflying ICESat-2
+ 
 ## Introduction
 
 ### Conda installation
