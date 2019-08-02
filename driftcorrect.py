@@ -20,7 +20,8 @@
 	Code written and tested in Python 3.6, with python dependencies:
 		numpy
 		h5py
-		matplotlib
+		matplotlib (for plotting)
+		basemap (for plotting)
 
 	Update history:
 		30th July 2019: Version 1
@@ -492,27 +493,22 @@ def main(FILE_PATH, FLIGHT_PATH, HEM_STR, MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2
 		#============== 4. Waypoint corrections ======================
 
 		original_lons, original_lats, corrected_lats, corrected_lons = CalcSequenceDriftCorrection(distance_traveled, ice_dir_deg, MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2_CROSSOVER_MIN, IS2_CROSSOVER_HOUR, FLIGHT_PATH)
-		#print(original_lons)
-		#print(original_lats)
-		#print(corrected_lats)
-		#print(corrected_lons)
 
 		print('Distance ice travelled (km):', distance_traveled)
 		print('Ice drift direction:', ice_dir_deg)
 
 		#============== 5. Plotting ======================
+		
 		# Drop the last row for plotting!
-
 		PlotMapCheck(original_lons[0:-1], original_lats[0:-1], corrected_lons[0:-1], corrected_lats[0:-1], savefigure=0)
 
 
 if __name__ == "__main__":
 
-	# CHANGED TO 12 FROM 13
 	MEASUREMENT_HOUR = 13 # Hour (Z) ;valid time for correction (time the winds are measured)
 	MEASUREMENT_MIN = 10 # Minutes
 	IS2_CROSSOVER_HOUR = 13 # Hour (Z) = Time at center waypoint on IS-2 track
-	IS2_CROSSOVER_MIN = 03 #Minutes
+	IS2_CROSSOVER_MIN = 3 #Minutes
 
 	WIND_SPEED_PLANE = 4 # Knots (converted to m/s in code below)
 	WIND_ANGLE_PLANE = 298 # Degrees (0 -> 360)
@@ -526,24 +522,6 @@ if __name__ == "__main__":
 	HEM_STR='ARCTIC_SPRING' #'ARCTIC_SPRING', 'ARCTIC_SUMMER', 'ANTARCTIC'
 	OUT_SEQUENCE=False # Output a sequence file
 
-
-
-	#FLIGHT_TYPE='RACETRACK'
-
-	# CHANGED TO 12 FROM 13
-	#MEASUREMENT_HOUR = 1 # Hour (Z) ;valid time for correction (time the winds are measured)
-	#MEASUREMENT_MIN = 10 # Minutes
-	#IS2_CROSSOVER_HOUR = 13 # Hour (Z) = Time at center waypoint on IS-2 track
-	#IS2_CROSSOVER_MIN = 03 #Minutes
-
-	#WIND_SPEED_PLANE = 4 # Knots (converted to m/s in code below)
-	#WIND_ANGLE_PLANE = 298 # Degrees (0 -> 360)
-	#PLANE_ALTITUDE = 3500.0 # Feet, use to calc plane pressure below
-	#PLANE_LATITUDE = 85.813 # Degrees (-90 -> +90)
-	#PLANE_LONGITUDE = -119.84 # Degrees
-	#FILE_PATH='./' # If we want to use directories to store data..Kinda pointless, maybe drop
-	#PRESSURE_LEVS = np.array([925,950,975,1000]) # pressure levels used to produce reanalysis wind scalings
-	#HEM_STR='ANTARCTIC'
 
 	main(FILE_PATH,FLIGHT_PATH, HEM_STR, MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2_CROSSOVER_HOUR, 
 		IS2_CROSSOVER_MIN, WIND_SPEED_PLANE, WIND_ANGLE_PLANE, PLANE_ALTITUDE,
