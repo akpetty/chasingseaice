@@ -249,6 +249,8 @@ def CalcSurfaceWindsDrift(hemStr, plane_altitude, plane_latitude, plane_longitud
 	#calculate angle of winds at surface
 	wind_direction_plane = wind_angle_plane - all_angle_xy[lev_pressure,lev_lon, lev_lat] 
 
+	# subtract 180 to express this as the wind direction (blowing to not from)
+	wind_direction_plane=wind_direction_plane-180.
 
 	#============== Kwok Drift turning angle/scaling Calculation ======================	
 
