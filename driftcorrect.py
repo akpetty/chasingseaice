@@ -44,8 +44,8 @@ import sys
 import h5py
 
 # Uncomment if you can't/don't want to plot
-from mpl_toolkits.basemap import Basemap
-from matplotlib import pyplot as plt
+#from mpl_toolkits.basemap import Basemap
+#from matplotlib import pyplot as plt
 
 def PlotMapCheck(original_lons, original_lats, corrected_lons, corrected_lats, savefigure=0):
 	""" Map original and corrected drifts as a sanity check
@@ -195,7 +195,7 @@ def select_mindiff_level(value, array):
 
 def CalcSurfaceWindsDrift(hemStr, plane_altitude, plane_latitude, plane_longitude,
 		wind_angle_plane, wind_speed_plane, all_intercept_xy, all_angle_xy, 
-		all_slope_xy, lon_reanalysis, lat_reanalysis, pressure_levs):
+		all_slope_xy, lon_reanalysis, lat_reanalysis, pressure_levs, time_diff):
 	""" Calculate the windspeed and direction at the surface from height
 
 	Ed data goes from plane to surface wind/direction. 
@@ -303,8 +303,12 @@ def CalcSurfaceWindsDrift(hemStr, plane_altitude, plane_latitude, plane_longitud
 	# ice_velocity in km/s
 	ice_velocity =  (surface_wind*ice_drift_scaling)/1000.
 
-	# Subtracted 180 from surface_direction as we are calculating where it's moving to, not from***
-	ice_dir_deg = (wind_direction_plane + turning_angle - 180.)
+	if (time_diff>0):
+		# Measurement time is before IS-2 X-Over
+		# Subtracted 180 from surface_direction as we are calculating where we need to move to correct for this***
+		ice_dir_deg = (wind_direction_plane + turning_angle - 180.)
+	else:
+		ice_dir_deg = wind_direction_plane + turning_angle
 
 	if (ice_dir_deg < 0):
 		ice_dir_deg = ice_dir_deg+360.
@@ -368,7 +372,7 @@ def DriftCorrectlatLonPair(original_lat, original_lon, ice_direction, dist_trave
 	return corrected_lat, corrected_lon
 
 
-def CalcSequenceDriftCorrection(distance_traveled, ice_direction, MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2_CROSSOVER_MIN, IS2_CROSSOVER_HOUR, FILE_PATH):
+def CalcSequenceDriftCorrection(distance_traveled, ice_direction, FILE_PATH):
 	""" Output the drifts onto the sequence file
 	
 	Inputs: windspeed, direction and pressure at plane altitude
@@ -387,7 +391,7 @@ def CalcSequenceDriftCorrection(distance_traveled, ice_direction, MEASUREMENT_HO
 	plan_file= open(FILE_PATH+'./siis2arcticocean.plan','r').readlines()   #siwestweddell.plan'
 
 	# Find index of Mission analysis row
-	for pidx in xrange(len(plan_file)):
+	for pidx in range(len(plan_file)):
 		if (plan_file[pidx]=='Mission Analysis\n'):
 			break
 
@@ -478,41 +482,42 @@ def main(FILE_PATH, FLIGHT_PATH, HEM_STR, MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2
 
 	#============== 3. Surface drift ======================
 
+	time_diff_to_IS2 = IS2timeDiff(MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2_CROSSOVER_MIN, IS2_CROSSOVER_HOUR)
+	
 	ice_velocity, ice_dir_deg = CalcSurfaceWindsDrift(HEM_STR, PLANE_ALTITUDE, PLANE_LATITUDE, 
 		PLANE_LONGITUDE, WIND_ANGLE_PLANE,WIND_SPEED_PLANE, all_intercept_xy, 
-		all_angle_xy, all_slope_xy, lon_reanalysis, lat_reanalysis, PRESSURE_LEVS)
+		all_angle_xy, all_slope_xy, lon_reanalysis, lat_reanalysis, PRESSURE_LEVS, 
+		time_diff_to_IS2)
 
-	time_diff_to_IS2 = IS2timeDiff(MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2_CROSSOVER_MIN, IS2_CROSSOVER_HOUR)
-	distance_traveled = time_diff_to_IS2*ice_velocity
+	distance_traveled = abs(time_diff_to_IS2)*ice_velocity
 
 	
-	print('Distance ice travelled (km):', distance_traveled)
-	print('Ice drift direction:', ice_dir_deg)
+	print('Correction distance (km):', distance_traveled)
+	print('Correction bearing (deg N):', ice_dir_deg)
 
 	if OUT_SEQUENCE:
 		#============== 4. Waypoint corrections ======================
 
-		original_lons, original_lats, corrected_lats, corrected_lons = CalcSequenceDriftCorrection(distance_traveled, ice_dir_deg, MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2_CROSSOVER_MIN, IS2_CROSSOVER_HOUR, FLIGHT_PATH)
+		original_lons, original_lats, corrected_lats, corrected_lons = CalcSequenceDriftCorrection(distance_traveled, ice_dir_deg, FLIGHT_PATH)
 
-		print('Distance ice travelled (km):', distance_traveled)
-		print('Ice drift direction:', ice_dir_deg)
-
+		print('Correction distance (km):', distance_traveled)
+		print('Correction bearing (deg N):', ice_dir_deg)
 		#============== 5. Plotting ======================
 		
 		# Drop the last row for plotting!
-		PlotMapCheck(original_lons[0:-1], original_lats[0:-1], corrected_lons[0:-1], corrected_lats[0:-1], savefigure=0)
+		#PlotMapCheck(original_lons[0:-1], original_lats[0:-1], corrected_lons[0:-1], corrected_lats[0:-1], savefigure=0)
 
 
 if __name__ == "__main__":
 
 	MEASUREMENT_HOUR = 13 # Hour (Z) ;valid time for correction (time the winds are measured)
-	MEASUREMENT_MIN = 10 # Minutes
-	IS2_CROSSOVER_HOUR = 13 # Hour (Z) = Time at center waypoint on IS-2 track
-	IS2_CROSSOVER_MIN = 3 #Minutes
+	MEASUREMENT_MIN = 0 # Minutes
+	IS2_CROSSOVER_HOUR = 10 # Hour (Z) = Time at center waypoint on IS-2 track
+	IS2_CROSSOVER_MIN = 0 #Minutes
 
-	WIND_SPEED_PLANE = 4 # Knots (converted to m/s in code below)
-	WIND_ANGLE_PLANE = 298 # Degrees (0 -> 360)
-	PLANE_ALTITUDE = 3500.0 # Feet, use to calc plane pressure below
+	WIND_SPEED_PLANE = 10 # Knots (converted to m/s in code below)
+	WIND_ANGLE_PLANE = 270 # Degrees (0 -> 360)
+	PLANE_ALTITUDE = 0.0 # Feet, use to calc plane pressure below
 	PLANE_LATITUDE = 82.813 # Degrees (-90 -> +90)
 	PLANE_LONGITUDE = -119.840 # Degrees
 	FILE_PATH='./data/'
@@ -520,7 +525,7 @@ if __name__ == "__main__":
 	PRESSURE_LEVS = np.array([925,950,975,1000]) # pressure levels used to produce reanalysis wind scalings
 	#PRESSURE_LEVS = np.array([850, 875, 900, 925,950,975,1000]) # pressure levels used to produce reanalysis wind scalings
 	HEM_STR='ARCTIC_SPRING' #'ARCTIC_SPRING', 'ARCTIC_SUMMER', 'ANTARCTIC'
-	OUT_SEQUENCE=False # Output a sequence file
+	OUT_SEQUENCE=True # Output a sequence file
 
 
 	main(FILE_PATH,FLIGHT_PATH, HEM_STR, MEASUREMENT_HOUR, MEASUREMENT_MIN, IS2_CROSSOVER_HOUR, 
