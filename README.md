@@ -39,7 +39,7 @@ python driftcorrect.py
 ```
 All the input data are hard-coded into the python file itself, including the measurement time, the IS-2 time, the plane position and some extra options.
 
-Currently it's just setup to do a single drift correction based on the wind measurement time, the plane position and the IS-2 cross-over time. The script should return single values for the drift correction (distance and the direction the ice is coming from) as well as an updated sequence file (ending in .driftcorrected) if the OUT_SEQUENCE flag is True.
+Currently it's just setup to do a single drift correction based on the wind measurement time, the plane position and the IS-2 cross-over time. The script should return single values for the drift correction (distance and the direction the plane needs to fly to correct for the ice drift) as well as an updated sequence file (ending in .driftcorrected) if the OUT_SEQUENCE flag is True.
 
 
 
